@@ -30,7 +30,7 @@ class _MyHomePageState extends State<MyHomePage> {
     PresentationView(),
     MessagesAndCallsView(),
     StatefulExampleView(),
-    HttpRequestView(),  // Aquí está la vista que utiliza http
+    HttpRequestView(),
   ];
 
   void _onItemTapped(int index) {
@@ -54,6 +54,9 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.http), label: 'HTTP'),
         ],
         currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blue, // Cambiar ítem seleccionado a azul
+        unselectedItemColor: Colors.grey, // Color de ítem no seleccionado
+        backgroundColor: Colors.white, // Color del fondo del navbar
         onTap: _onItemTapped,
       ),
     );
@@ -61,13 +64,28 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class PresentationView extends StatelessWidget {
+  final String project1Url = 'https://github.com/DarinelGuillen/phone_app.git';
+  final String project2Url = 'https://github.com/UliGaMi/app_movil_a2_c1.git';
+
+  void _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication, // Forzar que se abra en una app externa
+      );
+    } else {
+      throw 'No se pudo abrir el enlace: $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.network('https://via.placeholder.com/150'), // Placeholder image
+          Image.asset('assets/images/logoup.jpeg'), // Aquí se carga la imagen local
           DataTable(
             columns: [
               DataColumn(label: Text('Matrícula')),
@@ -82,13 +100,13 @@ class PresentationView extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              // Open Project 1 repository
+              _launchURL(project1Url); // Redirige a Proyecto 1
             },
             child: Text('Proyecto 1'),
           ),
           ElevatedButton(
             onPressed: () {
-              // Open Project 2 repository
+              _launchURL(project2Url); // Redirige a Proyecto 2
             },
             child: Text('Proyecto 2'),
           ),
@@ -155,28 +173,33 @@ class MessagesAndCallsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: DataTable(
-        columns: [
-          DataColumn(label: Text('Nombre')),
-          DataColumn(label: Text('Número')),
-          DataColumn(label: Text('Send Message')),
-        ],
-        rows: [
-          DataRow(cells: [
-            DataCell(Text(name)),
-            DataCell(GestureDetector(
-              onTap: () => _makePhoneCall(phoneNumber),
-              child: Text(
-                phoneNumber,
-                style: TextStyle(color: Colors.blue),
-              ),
-            )),
-            DataCell(IconButton(
-              icon: Icon(Icons.message),
-              onPressed: () => _sendMessage(context, phoneNumber),
-            )),
-          ]),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return DataTable(
+            columnSpacing: constraints.maxWidth * 0.1, // Ajustar el espaciado de columnas según el ancho disponible
+            columns: [
+              DataColumn(label: Text('Nombre')),
+              DataColumn(label: Text('Número')),
+              DataColumn(label: Text('Send Message')),
+            ],
+            rows: [
+              DataRow(cells: [
+                DataCell(Text(name)),
+                DataCell(GestureDetector(
+                  onTap: () => _makePhoneCall(phoneNumber),
+                  child: Text(
+                    phoneNumber,
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                )),
+                DataCell(IconButton(
+                  icon: Icon(Icons.message),
+                  onPressed: () => _sendMessage(context, phoneNumber),
+                )),
+              ]),
+            ],
+          );
+        },
       ),
     );
   }
@@ -188,11 +211,12 @@ class StatefulExampleView extends StatefulWidget {
 }
 
 class _StatefulExampleViewState extends State<StatefulExampleView> {
-  int _counter = 0;
+  String _inputText = ""; // Variable para almacenar el texto ingresado
+  final TextEditingController _textController = TextEditingController();
 
-  void _incrementCounter() {
+  void _updateText() {
     setState(() {
-      _counter++;
+      _inputText = _textController.text; // Actualizar el estado con el texto ingresado
     });
   }
 
@@ -202,14 +226,20 @@ class _StatefulExampleViewState extends State<StatefulExampleView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('You have pressed the button this many times:'),
-          Text(
-            '$_counter',
-            style: Theme.of(context).textTheme.headlineMedium, // Reemplazar headline4 con headlineMedium
+          TextField(
+            controller: _textController, // Controlador para capturar el texto
+            decoration: InputDecoration(
+              hintText: 'Escribe algo',
+            ),
           ),
           ElevatedButton(
-            onPressed: _incrementCounter,
-            child: Text('Increment Counter'),
+            onPressed: _updateText, // Actualiza el texto cuando se presiona
+            child: Text('Enviar'),
+          ),
+          SizedBox(height: 20),
+          Text(
+            _inputText, // Mostrar el texto ingresado
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
         ],
       ),
@@ -255,4 +285,3 @@ class _HttpRequestViewState extends State<HttpRequestView> {
     );
   }
 }
-
